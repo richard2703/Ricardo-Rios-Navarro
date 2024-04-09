@@ -5,3 +5,4 @@ npm install express
 npm install mysql
 npm install bcrypt
 npm install jsonwebtoken
+npm install express-validator

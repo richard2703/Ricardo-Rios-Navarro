@@ -19,9 +19,8 @@ function verifyToken(req, res, next) {
 
 		try {
 			// Verifica y decodifica el token
-			const decoded = jwt.verify(token, 'tu_clave_secreta');
+			const decoded = jwt.verify(token, 'KeyEnv');
 
-			// Adjunta el objeto decodificado del token a la solicitud para uso futuro
 			req.user = decoded;
 			const sql = 'SELECT * FROM access_tokens WHERE token = ?';
 			queryDatabase(sql, [token], (err, result) => {
@@ -34,7 +33,6 @@ function verifyToken(req, res, next) {
 				}
 			});
 
-			// Continúa con la siguiente middleware o controlador de ruta
 			next();
 		} catch (err) {
 			console.error('Error al verificar o decodificar el token:', err);

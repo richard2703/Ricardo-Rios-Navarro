@@ -1,24 +1,8 @@
 const express = require('express');
 const { queryDatabase } = require('../data/database');
-
+const { body, validationResult } = require('express-validator');
 const bodyParser = require('body-parser');
-// app.use(bodyParser.json());
 
-// Función para obtener todos los productos
-// function getAllProducts(req, res) {
-// 	const sql = 'SELECT * FROM users';
-
-// 	queryDatabase(sql, [], (err, result) => {
-// 		if (err) {
-// 			console.error('Error al ejecutar la consulta:', err);
-// 			res.status(500).json({ error: 'Error al obtener los productos.' });
-// 			return;
-// 		}
-// 		res.status(200).json(result);
-// 	});
-// }
-
-// Función asincrónica para obtener todos los productos
 async function getAllProducts(req, res) {
 	try {
 		console.log('entro');
@@ -50,6 +34,19 @@ async function getProductById(req, res) {
 
 async function createProduct(req, res) {
 	try {
+		await Promise.all([
+			body('name').notEmpty().trim().escape().isString().withMessage('El nombre es obligatorio y debe ser una cadena de texto').run(req),
+			body('description').notEmpty().trim().escape().isString().withMessage('La descripción es obligatoria y debe ser una cadena de texto').run(req),
+			body('height').notEmpty().isNumeric().withMessage('La altura es obligatoria y debe ser un número').run(req),
+			body('length').notEmpty().isNumeric().withMessage('La longitud es obligatoria y debe ser un número').run(req),
+			body('width').notEmpty().isNumeric().withMessage('El ancho es obligatorio y debe ser un número').run(req)
+		]);
+
+		// Verificar si hay errores de validación
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
 		const { name, description, height, length, width } = req.body;
 		const sql = 'INSERT INTO catalog_products (name, description, height, length, width) VALUES (?, ?, ?, ?, ?)';
 		const result = await queryDatabase(sql, [name, description, height, length, width]);
@@ -60,9 +57,21 @@ async function createProduct(req, res) {
 	}
 }
 
-// Función asincrónica para editar un producto
 async function updateProduct(req, res) {
 	try {
+		await Promise.all([
+			body('name').notEmpty().trim().escape().isString().withMessage('El nombre es obligatorio y debe ser una cadena de texto').run(req),
+			body('description').notEmpty().trim().escape().isString().withMessage('La descripción es obligatoria y debe ser una cadena de texto').run(req),
+			body('height').notEmpty().isNumeric().withMessage('La altura es obligatoria y debe ser un número').run(req),
+			body('length').notEmpty().isNumeric().withMessage('La longitud es obligatoria y debe ser un número').run(req),
+			body('width').notEmpty().isNumeric().withMessage('El ancho es obligatorio y debe ser un número').run(req)
+		]);
+
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
 		const productId = req.params.id;
 		const { name, description, height, length, width } = req.body;
 		const sql = 'UPDATE catalog_products SET name = ?, description = ?, height = ?, length = ?, width = ? WHERE id = ?';
@@ -78,7 +87,6 @@ async function updateProduct(req, res) {
 	}
 }
 
-// Función asincrónica para eliminar un producto
 async function deleteProduct(req, res) {
 	try {
 		const productId = req.params.id;

@@ -33,14 +33,10 @@ router.post('/register', (req, res) => {
 
 // Función para generar un token JWT con una duración de 1 hora
 function generateToken(user) {
-	// Define los datos que quieres incluir en el token (por ejemplo, el ID de usuario)
 	const payload = {
 		userId: user.id,
-		// Puedes incluir más datos aquí según tus necesidades
 	};
-
-	// Genera el token JWT con el payload, la clave secreta y la configuración de expiración
-	const token = jwt.sign(payload, 'tu_clave_secreta', { expiresIn: '1h' });
+	const token = jwt.sign(payload, 'KeyEnv', { expiresIn: '1h' });
 
 	return token;
 }
@@ -77,7 +73,7 @@ router.post('/login', (req, res) => {
 				return res.status(401).json({ error: 'Nombre de usuario o contraseña incorrectos.' });
 			}
 
-			const token = generateToken(user); // Implementa esta función según tus necesidades
+			const token = generateToken(user);
 			console.log('Token generado:', token);
 
 			// Guardar el token en la base de datos
