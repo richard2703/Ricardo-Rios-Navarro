@@ -1,130 +1,70 @@
 const express = require('express');
-const mysql = require('mysql');
-const bcrypt = require('bcrypt');
 
 const app = express();
 const port = 3000;
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
+const authRoutes = require('./routes/authRoutes');
+app.use('/users', authRoutes);
 
-// Configuración de la conexión a la base de datos
-const connection = mysql.createConnection({
-	host: 'localhost',
-	user: 'root',
-	password: '',
-	database: 'tienda'
-});
-
-// Conectar a la base de datos
-connection.connect((err) => {
-	if (err) {
-		console.error('Error al conectar a la base de datos:', err);
-		return;
-	}
-	console.log('Conexión a la base de datos establecida correctamente.');
-});
+const productsRoutes = require('./routes/productsRoutes');
+app.use('/', productsRoutes);
 
 
-///////////////////////////////////////////////////////
-// Endpoint para registrar un nuevo usuario
-app.post('/register', (req, res) => {
-	const { name, pass } = req.body;
+// Middleware para verificar el token JWT
+// function verifyToken(req, res, next) {
+// 	// Obtiene el token del encabezado de autorización
+// 	const authHeader = req.headers['authorization'];
 
-	console.log(req.body);
-	if (!name || !pass) {
-		return res.status(400).json({ error: 'Nombre de usuario y contraseña son requeridos.' });
-	}
+// 	// Verifica si el token existe
+// 	if (!authHeader) {
+// 		return res.status(401).json({ error: 'Token de autenticación no proporcionado.' });
+// 	}
 
-	// Hashear la contraseña antes de almacenarla en la base de datos
-	bcrypt.hash(pass, 10, (err, hashedPass) => {
-		if (err) {
-			console.error('Error al hashear contraseña:', err);
-			return res.status(500).json({ error: 'Error interno del servidor.' });
-		}
+// 	if (authHeader && authHeader.startsWith('Bearer ')) {
+// 		// Si el encabezado de autorización comienza con "Bearer ", extrae el token
+// 		const token = authHeader.substring(7); // Ignorar los primeros 7 caracteres (Bearer )
+// 		req.token = token; // Adjuntar el token al objeto de solicitud para su posterior uso
 
-		// Insertar el nuevo usuario en la base de datos
-		connection.query('INSERT INTO users (name, password) VALUES (?, ?)', [name, hashedPass], (err, result) => {
-			if (err) {
-				console.error('Error al registrar usuario:', err);
-				return res.status(500).json({ error: 'Error interno del servidor.' });
-			}
+// 		try {
+// 			// Verifica y decodifica el token
+// 			const decoded = jwt.verify(token, 'tu_clave_secreta');
 
-			// Devolver el ID del nuevo usuario creado
-			res.status(201).json({ id: result.insertId, name });
-		});
-	});
-});
+// 			// Adjunta el objeto decodificado del token a la solicitud para uso futuro
+// 			req.user = decoded;
+// 			connection.query('SELECT * FROM access_tokens WHERE token = ?', [token], (err, results) => {
+// 				if (err) {
+// 					console.error('Error al buscar usuario:', err);
+// 					return res.status(500).json({ error: 'Error interno del servidor.' });
+// 				}
 
-app.get('/', (req, res) => {
-	res.send('Hola server')
-});
+// 				if (results.length === 0) {
+// 					return res.status(401).json({ error: 'Token de autenticación inválido.' });
+// 				}
+// 			});
 
-app.get('/products', (req, res) => {
-	res.json([
-		{
-			name: 'String',
-			description: 'String',
-			height: 'Number',
-			length: 'Number',
-			width: 'Number'
-		}, {
-			name: 'String2',
-			description: 'String',
-			height: 'Number',
-			length: 'Number',
-			width: 'Number'
-		}
-	]);
-});
+// 			// Continúa con la siguiente middleware o controlador de ruta
+// 			next();
+// 		} catch (err) {
+// 			console.error('Error al verificar o decodificar el token:', err);
+// 			return res.status(401).json({ error: 'Token de autenticación inválido.' });
+// 		}
+// 	} else {
+// 		return res.status(401).json({ error: 'Formato de token de autenticación inválido.' });
+// 	}
+// }
 
-app.get('/products/:id', (req, res) => {
-	const { id } = req.params;
-	res.json({
-		id: id,
-		name: 'String',
-		description: 'String',
-		height: 'Number',
-		length: 'Number',
-		width: 'Number'
-	});
-});
+// Ahora puedes aplicar este middleware a las rutas que desees proteger
+// app.get('/ruta-protegida', verifyToken, (req, res) => {
+// 	// El middleware verifyToken verifica y decodifica el token antes de permitir el acceso a esta ruta
+// 	res.json({ mensaje: '¡Bienvenido a la ruta protegida!' });
+// });
 
-app.post('/products/:id', (req, res) => {
-	const { id } = req.params;
-	res.json({
-		id: id,
-		name: 'String',
-		description: 'String',
-		height: 'Number',
-		length: 'Number',
-		width: 'Number'
-	});
-});
+// app.get('/', (req, res) => {
+// 	res.send('Hola server')
+// });
 
-app.put('/products/:id', (req, res) => {
-	const { id } = req.params;
-	res.json({
-		id: id,
-		name: 'String',
-		description: 'String',
-		height: 'Number',
-		length: 'Number',
-		width: 'Number'
-	});
-});
-
-app.delete('/products/:id', (req, res) => {
-	const { id } = req.params;
-	res.json({
-		id: id,
-		name: 'String',
-		description: 'String',
-		height: 'Number',
-		length: 'Number',
-		width: 'Number'
-	});
-});
 
 app.listen(port, () => {
 	console.log('mi port' + port)
